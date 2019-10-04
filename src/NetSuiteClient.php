@@ -22,6 +22,16 @@ use NetSuite\Classes\TokenPassportSignature;
 use SoapClient;
 use SoapHeader;
 
+class WorkaroundSoapClient extends SoapClient
+{
+    public function __doRequest($request, $location, $action, $version, $one_way = 0)
+    {
+        $response = parent::__doRequest($request, $location, $action, $version, $one_way);
+        $response = preg_replace('/(\r\n)?[0-9A-F]{8}\r\n/', '', $response);
+        return $response;
+    }
+}
+
 class NetSuiteClient
 {
     /**
@@ -47,7 +57,7 @@ class NetSuiteClient
         $this->config = $config;
         $options = $this->createOptions($this->config, $options);
         $wsdl = $this->createWsdl($this->config);
-        $this->client = $client ?: new SoapClient($wsdl, $options);
+        $this->client = $client ?: new WorkaroundSoapClient($wsdl, $options);
     }
 
     public static function createFromEnv($options = array(), $client = null)
